@@ -15,17 +15,16 @@ public enum Execution_State {
     Preparing, Executing, Recoiling
 };
 
-public class States : MonoBehaviour {
+public class State {
 
     Action_State action;
 
-	// Use this for initialization
-	void Start () {
-		
-	}
-	
-	// Update is called once per frame
-	void Update () {
-		
-	}
+    public virtual void Engage() {
+
+    }
+
+    public virtual void Conclude() {
+        
+    }
+
 }
