@@ -2,15 +2,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class HandControler : MonoBehaviour {
+public class HandController : MonoBehaviour {
 
-	// Use this for initialization
-	void Start () {
-		
-	}
+    public Animator handimator;
 	
 	// Update is called once per frame
 	void Update () {
-		
 	}
 }
