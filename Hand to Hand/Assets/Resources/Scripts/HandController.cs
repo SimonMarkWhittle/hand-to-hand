@@ -1,8 +1,16 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum InputType { forwardMove, backwardMove, lightKick, heavyKick, lightPunch, heavyPunch, crouch, blank };
+public enum InputType {
+    forwardMoveLeft, forwardMoveRight,
+    backwardMoveLeft, backwardMoveMid, backwardMoveRight,
+    lightKickLeft, lightKickRight,
+    heavyKickLeft, heavyKickMid, heavyKickRight,
+    lightPunchLeft, lightPunchRight,
+    heavyPunchLeft, heavyPunchMid, heavyPunchRight,
+    crouch, blank };
 
 public enum PlayerSide { right, left };
 
@@ -10,49 +18,49 @@ public static class InputTypes {
     public static Dictionary<KeyCode, InputType> keyMapping = new Dictionary<KeyCode, InputType>() {
 
         //PLAYER ONE
-        { KeyCode.K, InputType.forwardMove },
-        { KeyCode.L, InputType.forwardMove },
+        { KeyCode.K, InputType.forwardMoveLeft },
+        { KeyCode.L, InputType.forwardMoveRight },
 
-        { KeyCode.M, InputType.backwardMove },
-        { KeyCode.Comma, InputType.backwardMove},
-        { KeyCode.Period, InputType.backwardMove},
+        { KeyCode.M, InputType.backwardMoveLeft },
+        { KeyCode.Comma, InputType.backwardMoveMid},
+        { KeyCode.Period, InputType.backwardMoveRight},
 
-        { KeyCode.I, InputType.lightKick},
-        { KeyCode.O, InputType.lightKick},
+        { KeyCode.I, InputType.lightKickLeft},
+        { KeyCode.O, InputType.lightKickRight},
 
-        { KeyCode.Alpha8, InputType.heavyKick},
-        { KeyCode.Alpha9, InputType.heavyKick},
-        { KeyCode.Alpha0, InputType.heavyKick},
+        { KeyCode.Alpha8, InputType.heavyKickLeft},
+        { KeyCode.Alpha9, InputType.heavyKickMid},
+        { KeyCode.Alpha0, InputType.heavyKickRight},
 
-        { KeyCode.J, InputType.lightPunch},
-        { KeyCode.Semicolon, InputType.lightPunch},
+        { KeyCode.J, InputType.lightPunchLeft},
+        { KeyCode.Semicolon, InputType.lightPunchRight},
 
-        { KeyCode.U, InputType.heavyPunch},
-        { KeyCode.P, InputType.heavyPunch},
+        { KeyCode.U, InputType.heavyPunchLeft},
+        { KeyCode.P, InputType.heavyPunchRight},
 
         { KeyCode.RightAlt, InputType.crouch},
         { KeyCode.Backslash, InputType.crouch},
 
         //PLAYER TWO
-        { KeyCode.S, InputType.forwardMove},
-        { KeyCode.D, InputType.forwardMove},
+        { KeyCode.S, InputType.forwardMoveLeft},
+        { KeyCode.D, InputType.forwardMoveRight},
 
-        { KeyCode.Z, InputType.backwardMove},
-        { KeyCode.X, InputType.backwardMove},
-        { KeyCode.C, InputType.backwardMove},
+        { KeyCode.Z, InputType.backwardMoveLeft},
+        { KeyCode.X, InputType.backwardMoveMid},
+        { KeyCode.C, InputType.backwardMoveRight},
 
-        { KeyCode.W, InputType.lightKick},
-        { KeyCode.E, InputType.lightKick},
+        { KeyCode.W, InputType.lightKickLeft},
+        { KeyCode.E, InputType.lightKickRight},
 
-        { KeyCode.Alpha2, InputType.heavyKick},
-        { KeyCode.Alpha3, InputType.heavyKick},
-        { KeyCode.Alpha4, InputType.heavyKick},
+        { KeyCode.Alpha2, InputType.heavyKickLeft},
+        { KeyCode.Alpha3, InputType.heavyKickMid},
+        { KeyCode.Alpha4, InputType.heavyKickRight},
 
-        { KeyCode.A, InputType.lightPunch},
-        { KeyCode.F, InputType.lightPunch},
+        { KeyCode.A, InputType.lightPunchLeft},
+        { KeyCode.F, InputType.lightPunchRight},
 
-        { KeyCode.Q, InputType.heavyPunch},
-        { KeyCode.R, InputType.heavyPunch},
+        { KeyCode.Q, InputType.heavyPunchLeft},
+        { KeyCode.R, InputType.heavyPunchRight},
 
         { KeyCode.LeftAlt, InputType.crouch},
     };
@@ -64,31 +72,9 @@ public static class InputTypes {
     }
 }
 
-public class KeyCombo {
-    InputType[] combo;
 
-    public bool ValidKeys(KeyCode[] keys) {
-
-        return false;
-    }
-}
-
-public class QueuedInput {
-    public int frameTime = 5;
-    public InputType inputType;
-
-    public QueuedInput(InputType _inputType) {
-        inputType = _inputType;
-    }
-}
-
-public class HandController : MonoBehaviour {
-
-    public Animator handimator;
-
-    public bool left = true;
-
-    private KeyCode[] rightKeys = {
+public static class KeySets {
+    public static readonly KeyCode[] rightKeys = {
         KeyCode.Alpha8, KeyCode.Alpha9, KeyCode.Alpha0,
         KeyCode.U, KeyCode.P,
         KeyCode.I, KeyCode.O,
@@ -98,7 +84,7 @@ public class HandController : MonoBehaviour {
         KeyCode.RightAlt, KeyCode.Backslash
     };
 
-    private KeyCode[] leftKeys = {
+    public static readonly KeyCode[] leftKeys = {
         KeyCode.Alpha2, KeyCode.Alpha3, KeyCode.Alpha4,
         KeyCode.W, KeyCode.E,
         KeyCode.Q, KeyCode.R,
@@ -107,47 +93,179 @@ public class HandController : MonoBehaviour {
         KeyCode.Z, KeyCode.X, KeyCode.C,
         KeyCode.LeftAlt
     };
+}
+
+public class HandController : MonoBehaviour {
+
+    public Animator handimator;
+
+    public bool left = true;
 
     public KeyCode[] actualKeys;
 
-    public List<QueuedInput> inputDown = new List<QueuedInput>();
-    public List<QueuedInput> inputHeld = new List<QueuedInput>();
-
-    int executeFrames = 5;
-    int framesElapsed = 0;
-    int frameTime = 0;
+    MoveHandler moveHandler = new MoveHandler();
 
     bool crouch = false;
     bool grounded = true;
 
     private void Start() {
-        actualKeys = (left) ? leftKeys : rightKeys;
+        actualKeys = (left) ? KeySets.leftKeys : KeySets.rightKeys;
     }
 
     // Update is called once per frame
     void Update () {
+        moveHandler.Update();
+
         foreach (KeyCode key in actualKeys) {
             if (Input.GetKeyDown(key)) {
-                inputDown.Add(new QueuedInput(InputTypes.TypeKeyIsIn(key)));
-            }
-        }
-
-        foreach (QueuedInput qI in inputDown) {
-            qI.frameTime--;
-            if (qI.frameTime == 0) {
-                ComboCheck();
-                inputDown.Remove(qI);
+                moveHandler.HandleInput(InputTypes.TypeKeyIsIn(key));
             }
         }
 	}
+}
 
-    void ComboCheck() {
-        for (int i = inputDown.Count; i > 0; i--) {
-            MoveCheck(inputDown.GetRange(0, i));
+public class MoveHandler {
+    public bool foundMove = false;
+    public bool foundMoveLocal = false;
+
+    public bool filledMove = false;
+    public bool filledMoveLocal = false;
+
+    public int frameTimer = 0;
+    public const int FRAME_TIME = 5;
+
+    /*
+     *     forwardMoveLeft, forwardMoveRight,
+    backwardMoveLeft, backwardMoveMid, backwardMoveRight,
+    lightKickLeft, lightKickRight,
+    heavyKickLeft, heavyKickMid, heavyKickRight,
+    lightPunchLeft, lightPunchRight,
+    heavyPunchLeft, heavyPunchMid, heavyPunchRight,
+    crouch, blank };
+     */
+
+    List<InputType> inputList = new List<InputType>();
+    Move[] moveList = new Move[] {
+new Move(new HashSet<InputType>() { InputType.lightKickLeft, InputType.lightKickRight}, "double kick"),
+
+new Move(new HashSet<InputType>() { InputType.forwardMoveLeft}, "forward move left"),
+new Move(new HashSet<InputType>() { InputType.forwardMoveRight}, "forward move right"),
+
+new Move(new HashSet<InputType>() { InputType.backwardMoveLeft}, "backward move left"),
+new Move(new HashSet<InputType>() { InputType.backwardMoveRight}, "backward move right"),
+
+new Move(new HashSet<InputType>() { InputType.heavyPunchLeft}, "heavy punch left"),
+new Move(new HashSet<InputType>() { InputType.heavyPunchRight}, "heavy punch right"),
+
+new Move(new HashSet<InputType>() { InputType.heavyKickLeft}, "heavy kick left"),
+new Move(new HashSet<InputType>() { InputType.heavyKickRight}, "heavy kick right"),
+
+new Move(new HashSet<InputType>() { InputType.lightPunchLeft}, "light punch left"),
+new Move(new HashSet<InputType>() { InputType.lightPunchRight}, "light punch right"),
+
+new Move(new HashSet<InputType>() { InputType.lightKickLeft}, "light kick left"),
+new Move(new HashSet<InputType>() { InputType.lightKickRight}, "light kick right"),
+};
+
+    public void Update() {
+        if (frameTimer > 0) {
+            frameTimer--;
+
+            if (frameTimer == 0 && inputList.Count > 0) {
+                Trigger();
+            }
         }
     }
 
-    void MoveCheck(List<QueuedInput> inputList) {
-        //if statements mapping KeyCode[] to actual moves
+    public bool HandleInput(InputType input) {
+        //check new move
+        if (frameTimer <= 0) {
+            frameTimer = FRAME_TIME;
+            filledMove = false;
+        }
+
+        foundMove = false;
+
+        if (inputList.Contains(input)) {
+            Trigger();
+            return false;
+        }
+        else {
+            inputList.Add(input);
+        }
+
+        if (!CheckMove(input)) {
+            Trigger();
+        }
+
+        return false;
+    }
+
+    bool CheckMove(InputType input) {
+        foreach (Move move in moveList) {         
+            if (!filledMove || !move.ignore){
+                if (!filledMove) {
+                    move.ResetFilled();
+                }
+                foundMoveLocal = move.CheckMatch(input);
+                foundMove |= foundMoveLocal;
+                if (foundMoveLocal) {
+                    if (foundMove) {
+                        filledMoveLocal = move.CheckFilled(inputList.Count);
+                        filledMove |= filledMoveLocal;
+                    }
+                }
+                else if (filledMove) {
+                    move.ignore = true;
+                }
+            }
+        }
+        return foundMove;
+    }
+
+    void Trigger() {
+        if (filledMove) {
+            foreach (Move move in moveList) {
+                if (move.filled) {
+                    Debug.Log(move.name + ": " + frameTimer);
+                    break;
+                }
+            }
+        }
+
+        inputList.Clear();
+        frameTimer = 0;
     }
 }
+
+public class Move {
+    HashSet<InputType> combination = new HashSet<InputType>();
+    public int count;
+    public bool filled = false;
+    public bool ignore = false;
+
+    public string name;
+
+    public Move(HashSet<InputType> _combination, string _name) {
+        combination = _combination;
+        count = combination.Count;
+
+        name = _name;
+    }
+
+    public bool CheckMatch(InputType input) {
+        return combination.Contains(input);
+    }
+
+    public bool CheckFilled(int moveCount) {
+        return filled = ignore = count == moveCount;
+    }
+
+    public void ResetFilled() {
+        filled = false;
+        ignore = false;
+    }
+}
+
+
+public class ComboHandler { }
