@@ -247,6 +247,7 @@ class PSMuscleEditorWindow : EditorWindow
 			}
 		}
 
+        Debug.Log("Lkid");
 		return false;
 	}
 	

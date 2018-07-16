@@ -14,11 +14,11 @@ public class PSReflectionFactory
 
 	public PSBaseReflection GetReflection ()
 	{
-		int i = compareVersion (Application.unityVersion, "5.1.0");
+		//int i = compareVersion (Application.unityVersion, "5.1.0");
 
-		if (i < 0)
-			return new PSReflectionForUnity4 ();
-		else
+		//if (i < 0)
+		//	return new PSReflectionForUnity4 ();
+		//else
 			return new PSReflectionForUnity510 ();
 	}
 
