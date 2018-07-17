@@ -142,9 +142,11 @@ public class MoveHandler {
 new Move(new HashSet<InputType>() { InputType.lightKickLeft, InputType.lightKickRight}, "double kick"),
 
 new Move(new HashSet<InputType>() { InputType.forwardMoveLeft}, "forward move left"),
+new Move(new HashSet<InputType>() { InputType.forwardMoveRight}, "forward move mid"),
 new Move(new HashSet<InputType>() { InputType.forwardMoveRight}, "forward move right"),
 
 new Move(new HashSet<InputType>() { InputType.backwardMoveLeft}, "backward move left"),
+new Move(new HashSet<InputType>() { InputType.backwardMoveRight}, "backward move mid"),
 new Move(new HashSet<InputType>() { InputType.backwardMoveRight}, "backward move right"),
 
 new Move(new HashSet<InputType>() { InputType.heavyPunchLeft}, "heavy punch left"),
@@ -227,8 +229,9 @@ new Move(new HashSet<InputType>() { InputType.lightKickRight}, "light kick right
         if (filledMove) {
             foreach (Move move in moveList) {
                 if (move.filled) {
-                    Debug.Log(move.name + ": " + frameTimer);
-                    comboHandler.CheckCombo(move);
+                    if (!comboHandler.CheckCombo(move)) {
+                        Debug.Log(move.name);
+                    }
                     break;
                 }
             }
@@ -276,13 +279,13 @@ public class ComboHandler {
     };
     Combo currentCombo;
     int comboCount = 0;
+    bool comboFound = false;
 
     public void Update() {
         if (frameTimer > 0) {
             frameTimer--;
 
             if (frameTimer == 0) {
-                Debug.Log("Combo Ended");
                 currentCombo = null;
                 comboCount = 0;
                 foreach (Combo combo in comboList) {
@@ -299,13 +302,16 @@ public class ComboHandler {
             comboCount = 0;
         }
 
+        comboFound = false;
+
         foreach (Combo combo in comboList) {
             if (!combo.ignore) {
                 if (combo.HasCombo(move, comboCount)) {
                     frameTimer = FRAME_TIME;
                     if (comboCount == combo.moveCount) {
                         currentCombo = combo; //perform combo move
-                        Debug.Log(combo.name);
+                        Debug.Log("COMBO: " + combo.name);
+                        comboFound = true;
                     }
                 }
                 else {
@@ -315,7 +321,7 @@ public class ComboHandler {
         }
 
         comboCount++;
-        return false;
+        return comboFound;
     }
 }
 
