@@ -10,7 +10,8 @@ public enum InputType {
     heavyKickLeft, heavyKickMid, heavyKickRight,
     lightPunchLeft, lightPunchRight,
     heavyPunchLeft, heavyPunchMid, heavyPunchRight,
-    crouch, blank };
+    crouch, blank
+};
 
 public enum PlayerSide { right, left };
 
@@ -97,6 +98,7 @@ public static class KeySets {
 
 public class HandController : MonoBehaviour {
 
+    public Animator handimator;
 
     public bool left = true;
 
@@ -109,11 +111,10 @@ public class HandController : MonoBehaviour {
 
     private void Start() {
         actualKeys = (left) ? KeySets.leftKeys : KeySets.rightKeys;
-        moveHandler.handimator = GetComponentInChildren<Animator>();
     }
 
     // Update is called once per frame
-    void Update () {
+    void Update() {
         moveHandler.Update();
 
         foreach (KeyCode key in actualKeys) {
@@ -121,42 +122,43 @@ public class HandController : MonoBehaviour {
                 moveHandler.HandleInput(InputTypes.TypeKeyIsIn(key));
             }
         }
-	}
+    }
 }
 
 public class MoveHandler {
-    public bool foundMove = false;
-    public bool foundMoveLocal = false;
+    bool foundMove = false;
+    bool foundMoveLocal = false;
 
-    public bool filledMove = false;
-    public bool filledMoveLocal = false;
+    bool filledMove = false;
+    bool filledMoveLocal = false;
 
-    public int frameTimer = 0;
-    public const int FRAME_TIME = 5;
-    public Animator handimator;
+    int frameTimer = 0;
+    const int FRAME_TIME = 5;
+
+    ComboHandler comboHandler = new ComboHandler();
 
     List<InputType> inputList = new List<InputType>();
     Move[] moveList = new Move[] {
-        new Move(new HashSet<InputType>() { InputType.lightKickLeft, InputType.lightKickRight}, "double kick"),
+new Move(new HashSet<InputType>() { InputType.lightKickLeft, InputType.lightKickRight}, "double kick"),
 
-        new Move(new HashSet<InputType>() { InputType.forwardMoveLeft}, "forward move left"),
-        new Move(new HashSet<InputType>() { InputType.forwardMoveRight}, "forward move right"),
+new Move(new HashSet<InputType>() { InputType.forwardMoveLeft}, "forward move left"),
+new Move(new HashSet<InputType>() { InputType.forwardMoveRight}, "forward move right"),
 
-        new Move(new HashSet<InputType>() { InputType.backwardMoveLeft}, "backward move left"),
-        new Move(new HashSet<InputType>() { InputType.backwardMoveRight}, "backward move right"),
+new Move(new HashSet<InputType>() { InputType.backwardMoveLeft}, "backward move left"),
+new Move(new HashSet<InputType>() { InputType.backwardMoveRight}, "backward move right"),
 
-        new Move(new HashSet<InputType>() { InputType.heavyPunchLeft}, "heavy punch left"),
-        new Move(new HashSet<InputType>() { InputType.heavyPunchRight}, "heavy punch right"),
+new Move(new HashSet<InputType>() { InputType.heavyPunchLeft}, "heavy punch left"),
+new Move(new HashSet<InputType>() { InputType.heavyPunchRight}, "heavy punch right"),
 
-        new Move(new HashSet<InputType>() { InputType.heavyKickLeft}, "heavy kick left"),
-        new Move(new HashSet<InputType>() { InputType.heavyKickRight}, "heavy kick right"),
+new Move(new HashSet<InputType>() { InputType.heavyKickLeft}, "heavy kick left"),
+new Move(new HashSet<InputType>() { InputType.heavyKickRight}, "heavy kick right"),
 
-        new Move(new HashSet<InputType>() { InputType.lightPunchLeft}, "light punch left"),
-        new Move(new HashSet<InputType>() { InputType.lightPunchRight}, "light punch right"),
+new Move(new HashSet<InputType>() { InputType.lightPunchLeft}, "light punch left"),
+new Move(new HashSet<InputType>() { InputType.lightPunchRight}, "light punch right"),
 
-        new Move(new HashSet<InputType>() { InputType.lightKickLeft}, "light kick left"),
-        new Move(new HashSet<InputType>() { InputType.lightKickRight}, "light kick right"),
-    };
+new Move(new HashSet<InputType>() { InputType.lightKickLeft}, "light kick left"),
+new Move(new HashSet<InputType>() { InputType.lightKickRight}, "light kick right"),
+};
 
     public void Update() {
         if (frameTimer > 0) {
@@ -165,7 +167,10 @@ public class MoveHandler {
             if (frameTimer == 0 && inputList.Count > 0) {
                 Trigger();
             }
+
         }
+
+        comboHandler.Update();
     }
 
     public bool HandleInput(InputType input) {
@@ -193,19 +198,23 @@ public class MoveHandler {
     }
 
     bool CheckMove(InputType input) {
-        foreach (Move move in moveList) {         
-            if (!filledMove || !move.ignore){
+        foreach (Move move in moveList) {
+            if (!filledMove || !move.ignore) {
+
                 if (!filledMove) {
                     move.ResetFilled();
                 }
+
                 foundMoveLocal = move.CheckMatch(input);
                 foundMove |= foundMoveLocal;
+
                 if (foundMoveLocal) {
                     if (foundMove) {
                         filledMoveLocal = move.CheckFilled(inputList.Count);
                         filledMove |= filledMoveLocal;
                     }
                 }
+
                 else if (filledMove) {
                     move.ignore = true;
                 }
@@ -218,23 +227,8 @@ public class MoveHandler {
         if (filledMove) {
             foreach (Move move in moveList) {
                 if (move.filled) {
-                    Debug.Log(move.name + "| " + frameTimer);
-
-                    int attackID = 1;
-                    attackID += move.name.ToLower().Contains("kick") ? 1 : 0;
-                    attackID += move.name.ToLower().Contains("heavy") ? 2 : 0;
-                        Debug.Log("AID:: "+attackID + "    | "+handimator);
-
-                    if(attackID==1 && !move.name.ToLower().Contains("light")) {
-                        int direction = 1;
-                        direction *= (move.name.ToLower().Contains("backw")) ? -1 : 1;
-
-                        // apply movement to gameobject
-                    } else {
-                        handimator.SetInteger("AttackID", attackID);
-                        handimator.SetTrigger("Attack");
-                    }
-
+                    Debug.Log(move.name + ": " + frameTimer);
+                    comboHandler.CheckCombo(move);
                     break;
                 }
             }
@@ -253,7 +247,7 @@ public class Move {
 
     public string name;
 
-    public Move(HashSet<InputType> _combination, string _name) {
+    public Move(HashSet<InputType> _combination, string _name = "move") {
         combination = _combination;
         count = combination.Count;
 
@@ -269,10 +263,82 @@ public class Move {
     }
 
     public void ResetFilled() {
-        filled = false;
-        ignore = false;
+        filled = ignore = false;
     }
 }
 
 
-public class ComboHandler { }
+public class ComboHandler {
+    int frameTimer = 0;
+    const int FRAME_TIME = 10;
+    List<Combo> comboList = new List<Combo>() {
+        new Combo(new string[] { "light punch left", "light punch left"}, "the ol' razzle dazzle")
+    };
+    Combo currentCombo;
+    int comboCount = 0;
+
+    public void Update() {
+        if (frameTimer > 0) {
+            frameTimer--;
+
+            if (frameTimer == 0) {
+                Debug.Log("Combo Ended");
+                currentCombo = null;
+                comboCount = 0;
+                foreach (Combo combo in comboList) {
+                    combo.ResetCombo();
+                }
+            }
+        }
+    }
+
+    public bool CheckCombo(Move move) {
+        if (frameTimer == 0) {
+            frameTimer = FRAME_TIME;
+            currentCombo = null;
+            comboCount = 0;
+        }
+
+        foreach (Combo combo in comboList) {
+            if (!combo.ignore) {
+                if (combo.HasCombo(move, comboCount)) {
+                    frameTimer = FRAME_TIME;
+                    if (comboCount == combo.moveCount) {
+                        currentCombo = combo; //perform combo move
+                        Debug.Log(combo.name);
+                    }
+                }
+                else {
+                    combo.ignore = true;
+                }
+            }
+        }
+
+        comboCount++;
+        return false;
+    }
+}
+
+public class Combo {
+    string[] moveCombo;
+    public int moveCount;
+    public bool ignore = false;
+    public string name;
+
+    public Combo(string[] _moveCombo, string _name = "combo") {
+        moveCombo = _moveCombo;
+        moveCount = moveCombo.Length - 1;
+        name = _name;
+    }
+
+    public void ResetCombo() {
+        ignore = false;
+    }
+
+    public bool HasCombo(Move move, int comboCount) {
+        if (comboCount < moveCombo.Length)
+            return moveCombo[comboCount] == move.name;
+
+        return false;
+    }
+}
