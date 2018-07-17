@@ -5,7 +5,7 @@ using UnityEngine;
 [RequireComponent(typeof(Collider2D))]
 public class Hurtbox : MonoBehaviour {
 
-	public bool isRightHand;
+	public PlayerSide side;
 
 	public float damage;
 
@@ -23,7 +23,7 @@ public class Hurtbox : MonoBehaviour {
 	}
 
 	void OnTriggerEnter2D(Collider2D other) {
-		if ((isRightHand && other.CompareTag("LeftHand")) || (!isRightHand && other.CompareTag("RightHand"))) {
+		if ((side == PlayerSide.right && other.CompareTag("LeftHand")) || (side == PlayerSide.left && other.CompareTag("RightHand"))) {
 			Hand handy = other.GetComponent<Hand> ();
 			handy.Damage (damage);
 			handy.Knock (knockback);
