@@ -284,7 +284,9 @@ public class ComboHandler {
     int frameTimer = 0;
     const int FRAME_TIME = 10;
     List<Combo> comboList = new List<Combo>() {
-        new Combo(new MoveType[] { MoveType.lightPunchLeft, MoveType.lightPunchLeft}, "the ol' razzle dazzle")
+        new Combo(new MoveType[] { MoveType.lightPunchLeft, MoveType.lightPunchLeft}, "the ol' razzle dazzle"),
+        new Combo(new MoveType[] { MoveType.lightPunchLeft, MoveType.lightPunchLeft, MoveType.lightPunchRight, MoveType.lightPunchRight}, "the new razzle dazzle"),
+        new Combo(new MoveType[] { MoveType.heavyKickRight, MoveType.heavyKickRight, MoveType.heavyKickLeft, MoveType.heavyKickLeft}, "the one-two kick")
     };
     Combo currentCombo;
     int comboCount = 0;
