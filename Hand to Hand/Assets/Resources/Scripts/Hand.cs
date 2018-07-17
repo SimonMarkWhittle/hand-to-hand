@@ -103,4 +103,9 @@ public class Hand : MonoBehaviour {
         Debug.Log("DIE, MORON"); //WILL DIE
         stunTimer = 1000000f;
     }
+
+	public void Knock(Vector2 force) {
+		//TODO:
+		//Knock back by specified force
+	}
 }

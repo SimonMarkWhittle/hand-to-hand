@@ -1,0 +1,34 @@
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+[RequireComponent(typeof(Collider2D))]
+public class Hurtbox : MonoBehaviour {
+
+	public bool isRightHand;
+
+	public float damage;
+
+	public float stunTime;
+
+	public Vector2 knockback;
+
+	// Use this for initialization
+	void Start () {
+	}
+	
+	// Update is called once per frame
+	void Update () {
+		
+	}
+
+	void OnTriggerEnter2D(Collider2D other) {
+		if ((isRightHand && other.CompareTag("LeftHand")) || (!isRightHand && other.CompareTag("RightHand"))) {
+			Hand handy = other.GetComponent<Hand> ();
+			handy.Damage (damage);
+			handy.Knock (knockback);
+			handy.Stun (stunTime);
+			gameObject.SetActive (false);
+		}
+	}
+}
