@@ -13,6 +13,17 @@ public enum InputType {
     crouch, blank
 };
 
+public enum MoveType {
+    doubleKick,
+    forwardMoveLeft, fowardMoveMid, forwardMoveRight,
+    backwardMoveLeft, backwardMoveMid, backwardMoveRight,
+    heavyPunchLeft, heavyPunchRight,
+    heavyKickLeft, heavyKickRight,
+    lightPunchLeft, lightPunchRight,
+    lightKickLeft, lightKickRight,
+    blank
+}
+
 public enum PlayerSide { right, left };
 
 public static class InputTypes {
@@ -139,27 +150,26 @@ public class MoveHandler {
 
     List<InputType> inputList = new List<InputType>();
     Move[] moveList = new Move[] {
-new Move(new HashSet<InputType>() { InputType.lightKickLeft, InputType.lightKickRight}, "double kick"),
+new Move(new HashSet<InputType>() { InputType.lightKickLeft, InputType.lightKickRight}, MoveType.doubleKick),
 
-new Move(new HashSet<InputType>() { InputType.forwardMoveLeft}, "forward move left"),
-new Move(new HashSet<InputType>() { InputType.forwardMoveRight}, "forward move mid"),
-new Move(new HashSet<InputType>() { InputType.forwardMoveRight}, "forward move right"),
+new Move(new HashSet<InputType>() { InputType.forwardMoveLeft}, MoveType.forwardMoveLeft),
+new Move(new HashSet<InputType>() { InputType.forwardMoveRight}, MoveType.forwardMoveRight),
 
-new Move(new HashSet<InputType>() { InputType.backwardMoveLeft}, "backward move left"),
-new Move(new HashSet<InputType>() { InputType.backwardMoveRight}, "backward move mid"),
-new Move(new HashSet<InputType>() { InputType.backwardMoveRight}, "backward move right"),
+new Move(new HashSet<InputType>() { InputType.backwardMoveLeft}, MoveType.backwardMoveLeft),
+new Move(new HashSet<InputType>() { InputType.backwardMoveMid}, MoveType.backwardMoveMid),
+new Move(new HashSet<InputType>() { InputType.backwardMoveRight}, MoveType.backwardMoveRight),
 
-new Move(new HashSet<InputType>() { InputType.heavyPunchLeft}, "heavy punch left"),
-new Move(new HashSet<InputType>() { InputType.heavyPunchRight}, "heavy punch right"),
+new Move(new HashSet<InputType>() { InputType.heavyPunchLeft}, MoveType.heavyPunchLeft),
+new Move(new HashSet<InputType>() { InputType.heavyPunchRight}, MoveType.heavyPunchRight),
 
-new Move(new HashSet<InputType>() { InputType.heavyKickLeft}, "heavy kick left"),
-new Move(new HashSet<InputType>() { InputType.heavyKickRight}, "heavy kick right"),
+new Move(new HashSet<InputType>() { InputType.heavyKickLeft}, MoveType.heavyKickLeft),
+new Move(new HashSet<InputType>() { InputType.heavyKickRight}, MoveType.heavyKickRight),
 
-new Move(new HashSet<InputType>() { InputType.lightPunchLeft}, "light punch left"),
-new Move(new HashSet<InputType>() { InputType.lightPunchRight}, "light punch right"),
+new Move(new HashSet<InputType>() { InputType.lightPunchLeft}, MoveType.lightPunchLeft),
+new Move(new HashSet<InputType>() { InputType.lightPunchRight}, MoveType.lightPunchRight),
 
-new Move(new HashSet<InputType>() { InputType.lightKickLeft}, "light kick left"),
-new Move(new HashSet<InputType>() { InputType.lightKickRight}, "light kick right"),
+new Move(new HashSet<InputType>() { InputType.lightKickLeft}, MoveType.lightKickLeft),
+new Move(new HashSet<InputType>() { InputType.lightKickRight}, MoveType.lightKickRight)
 };
 
     public void Update() {
@@ -211,10 +221,9 @@ new Move(new HashSet<InputType>() { InputType.lightKickRight}, "light kick right
                 foundMove |= foundMoveLocal;
 
                 if (foundMoveLocal) {
-                    if (foundMove) {
-                        filledMoveLocal = move.CheckFilled(inputList.Count);
-                        filledMove |= filledMoveLocal;
-                    }
+                    //If filled, move is internally flagged as ignored
+                    filledMoveLocal = move.CheckFilled(inputList.Count);
+                    filledMove |= filledMoveLocal;
                 }
 
                 else if (filledMove) {
@@ -230,7 +239,7 @@ new Move(new HashSet<InputType>() { InputType.lightKickRight}, "light kick right
             foreach (Move move in moveList) {
                 if (move.filled) {
                     if (!comboHandler.CheckCombo(move)) {
-                        Debug.Log(move.name);
+                        Debug.Log(move.moveType.ToString());
                     }
                     break;
                 }
@@ -248,13 +257,13 @@ public class Move {
     public bool filled = false;
     public bool ignore = false;
 
-    public string name;
+    public MoveType moveType;
 
-    public Move(HashSet<InputType> _combination, string _name = "move") {
+    public Move(HashSet<InputType> _combination, MoveType _moveType = MoveType.blank) {
         combination = _combination;
         count = combination.Count;
 
-        name = _name;
+        moveType = _moveType;
     }
 
     public bool CheckMatch(InputType input) {
@@ -275,7 +284,7 @@ public class ComboHandler {
     int frameTimer = 0;
     const int FRAME_TIME = 10;
     List<Combo> comboList = new List<Combo>() {
-        new Combo(new string[] { "light punch left", "light punch left"}, "the ol' razzle dazzle")
+        new Combo(new MoveType[] { MoveType.lightPunchLeft, MoveType.lightPunchLeft}, "the ol' razzle dazzle")
     };
     Combo currentCombo;
     int comboCount = 0;
@@ -326,12 +335,12 @@ public class ComboHandler {
 }
 
 public class Combo {
-    string[] moveCombo;
+    MoveType[] moveCombo;
     public int moveCount;
     public bool ignore = false;
     public string name;
 
-    public Combo(string[] _moveCombo, string _name = "combo") {
+    public Combo(MoveType[] _moveCombo, string _name = "combo") {
         moveCombo = _moveCombo;
         moveCount = moveCombo.Length - 1;
         name = _name;
@@ -343,7 +352,7 @@ public class Combo {
 
     public bool HasCombo(Move move, int comboCount) {
         if (comboCount < moveCombo.Length)
-            return moveCombo[comboCount] == move.name;
+            return moveCombo[comboCount] == move.moveType;
 
         return false;
     }
