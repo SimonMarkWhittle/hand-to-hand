@@ -185,6 +185,7 @@ new Move(new HashSet<InputType>() { InputType.lightKickRight}, MoveType.lightKic
         comboHandler.Update();
     }
 
+    //This came to me in a dream
     public bool HandleInput(InputType input) {
         //check new move
         if (frameTimer <= 0) {
