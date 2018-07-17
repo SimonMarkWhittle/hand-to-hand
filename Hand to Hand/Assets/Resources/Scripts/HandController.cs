@@ -97,7 +97,6 @@ public static class KeySets {
 
 public class HandController : MonoBehaviour {
 
-    public Animator handimator;
 
     public bool left = true;
 
@@ -110,6 +109,7 @@ public class HandController : MonoBehaviour {
 
     private void Start() {
         actualKeys = (left) ? KeySets.leftKeys : KeySets.rightKeys;
+        moveHandler.handimator = GetComponentInChildren<Animator>();
     }
 
     // Update is called once per frame
@@ -133,39 +133,30 @@ public class MoveHandler {
 
     public int frameTimer = 0;
     public const int FRAME_TIME = 5;
-
-    /*
-     *     forwardMoveLeft, forwardMoveRight,
-    backwardMoveLeft, backwardMoveMid, backwardMoveRight,
-    lightKickLeft, lightKickRight,
-    heavyKickLeft, heavyKickMid, heavyKickRight,
-    lightPunchLeft, lightPunchRight,
-    heavyPunchLeft, heavyPunchMid, heavyPunchRight,
-    crouch, blank };
-     */
+    public Animator handimator;
 
     List<InputType> inputList = new List<InputType>();
     Move[] moveList = new Move[] {
-new Move(new HashSet<InputType>() { InputType.lightKickLeft, InputType.lightKickRight}, "double kick"),
+        new Move(new HashSet<InputType>() { InputType.lightKickLeft, InputType.lightKickRight}, "double kick"),
 
-new Move(new HashSet<InputType>() { InputType.forwardMoveLeft}, "forward move left"),
-new Move(new HashSet<InputType>() { InputType.forwardMoveRight}, "forward move right"),
+        new Move(new HashSet<InputType>() { InputType.forwardMoveLeft}, "forward move left"),
+        new Move(new HashSet<InputType>() { InputType.forwardMoveRight}, "forward move right"),
 
-new Move(new HashSet<InputType>() { InputType.backwardMoveLeft}, "backward move left"),
-new Move(new HashSet<InputType>() { InputType.backwardMoveRight}, "backward move right"),
+        new Move(new HashSet<InputType>() { InputType.backwardMoveLeft}, "backward move left"),
+        new Move(new HashSet<InputType>() { InputType.backwardMoveRight}, "backward move right"),
 
-new Move(new HashSet<InputType>() { InputType.heavyPunchLeft}, "heavy punch left"),
-new Move(new HashSet<InputType>() { InputType.heavyPunchRight}, "heavy punch right"),
+        new Move(new HashSet<InputType>() { InputType.heavyPunchLeft}, "heavy punch left"),
+        new Move(new HashSet<InputType>() { InputType.heavyPunchRight}, "heavy punch right"),
 
-new Move(new HashSet<InputType>() { InputType.heavyKickLeft}, "heavy kick left"),
-new Move(new HashSet<InputType>() { InputType.heavyKickRight}, "heavy kick right"),
+        new Move(new HashSet<InputType>() { InputType.heavyKickLeft}, "heavy kick left"),
+        new Move(new HashSet<InputType>() { InputType.heavyKickRight}, "heavy kick right"),
 
-new Move(new HashSet<InputType>() { InputType.lightPunchLeft}, "light punch left"),
-new Move(new HashSet<InputType>() { InputType.lightPunchRight}, "light punch right"),
+        new Move(new HashSet<InputType>() { InputType.lightPunchLeft}, "light punch left"),
+        new Move(new HashSet<InputType>() { InputType.lightPunchRight}, "light punch right"),
 
-new Move(new HashSet<InputType>() { InputType.lightKickLeft}, "light kick left"),
-new Move(new HashSet<InputType>() { InputType.lightKickRight}, "light kick right"),
-};
+        new Move(new HashSet<InputType>() { InputType.lightKickLeft}, "light kick left"),
+        new Move(new HashSet<InputType>() { InputType.lightKickRight}, "light kick right"),
+    };
 
     public void Update() {
         if (frameTimer > 0) {
@@ -227,7 +218,23 @@ new Move(new HashSet<InputType>() { InputType.lightKickRight}, "light kick right
         if (filledMove) {
             foreach (Move move in moveList) {
                 if (move.filled) {
-                    Debug.Log(move.name + ": " + frameTimer);
+                    Debug.Log(move.name + "| " + frameTimer);
+
+                    int attackID = 1;
+                    attackID += move.name.ToLower().Contains("kick") ? 1 : 0;
+                    attackID += move.name.ToLower().Contains("heavy") ? 2 : 0;
+                        Debug.Log("AID:: "+attackID + "    | "+handimator);
+
+                    if(attackID==1 && !move.name.ToLower().Contains("light")) {
+                        int direction = 1;
+                        direction *= (move.name.ToLower().Contains("backw")) ? -1 : 1;
+
+                        // apply movement to gameobject
+                    } else {
+                        handimator.SetInteger("AttackID", attackID);
+                        handimator.SetTrigger("Attack");
+                    }
+
                     break;
                 }
             }
