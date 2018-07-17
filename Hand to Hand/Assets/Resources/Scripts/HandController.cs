@@ -111,7 +111,7 @@ public class HandController : MonoBehaviour {
 
     public Animator handimator;
 
-    public bool left = true;
+    public PlayerSide side = PlayerSide.left;
 
     public KeyCode[] actualKeys;
 
@@ -121,7 +121,7 @@ public class HandController : MonoBehaviour {
     bool grounded = true;
 
     private void Start() {
-        actualKeys = (left) ? KeySets.leftKeys : KeySets.rightKeys;
+        actualKeys = (side == PlayerSide.left) ? KeySets.leftKeys : KeySets.rightKeys;
     }
 
     // Update is called once per frame
